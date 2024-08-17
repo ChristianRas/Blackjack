@@ -147,7 +147,7 @@ def showhands(player_hands: list, dealerhand: DealerHand) -> None:
         
 
 def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
-    """Evaluates ONE playerhand against the dealers and returns the multiplier to the bet for a given outcome."""
+    """Evaluates ONE playerhand against the dealers and returns the payout_ratio to the bet for a given outcome."""
     if playerhand.value() > 21:
         print(f"Player busts\n")
         return 0
@@ -169,7 +169,8 @@ def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
     
 
 def main():
-    """Plays blackjack"""
+    """Runs a blackjack simulation with sidebets of Perfect Pairs and 21+3 and options for double down and split.
+       The Payout Ratios have been increased to make it a winning game, it is for fun after all."""
     
     balance = 1000
     blackjack_bets = [0]
@@ -341,14 +342,14 @@ def main():
                 
                 time.sleep(2)
                 
-                multiplier = evaluate_game(player_hands[i], dealerhand)
+                payout_ratio = evaluate_game(player_hands[i], dealerhand)
                 
                 time.sleep(2)
                 
-                if multiplier > 0:
-                    print(f"Player wins {print_money(multiplier*blackjack_bets[i])}\n")
-                    balance += multiplier*blackjack_bets[i]
-                    total_earnings += multiplier*blackjack_bets[i]
+                if payout_ratio > 0:
+                    print(f"Player wins {print_money(payout_ratio*blackjack_bets[i])}\n")
+                    balance += payout_ratio*blackjack_bets[i]
+                    total_earnings += payout_ratio*blackjack_bets[i]
                 else:
                     print(f"Player loses {print_money(blackjack_bets[i], loss=True)}\n")
                     total_earnings -= blackjack_bets[i]
