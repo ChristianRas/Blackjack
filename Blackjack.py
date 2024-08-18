@@ -226,7 +226,7 @@ def main():
                     break
                 else:            
                 
-                    player_game_options = ["Hit", "Stay"]
+                    player_game_options = ["Hit", "Stand"]
                     
                     if active_hand.virgin:
                         player_game_options.append("Double Down")
@@ -247,7 +247,7 @@ def main():
                         else:
                             active_hand.virgin = False
                     elif player_game_selection == 2:
-                        print("Player stays...\n")
+                        print("Player stands...\n")
                         active_hand.active = False
                     elif player_game_selection == 3:
                         print("Player doubles down...\n")
