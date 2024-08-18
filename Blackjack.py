@@ -3,12 +3,11 @@ import random as r
 import time
 import os
 
-r.seed(100)
-
 cardsymbol_to_value_dictionary = {"a": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
 
 class Card:
-    """Card object that is represented by a suit ('heart', 'club' etc.), a cardsymbol ('10', 'J' etc.) and a corresponding Blackjack card value (1-11)."""
+    
+    """Card object that is represented by a suit ('heart', 'club', etc.), a cardsymbol ('10', 'J', etc.) and a corresponding Blackjack card value (1-11)."""
     
     def __init__(self, suit, cardsymbol) -> None:
         
@@ -26,6 +25,7 @@ class Card:
         return f"{self.cardsymbol}{suit_emoji_dictionary[self.suit]}"
 
 class Deck:
+    
     """Container class for Card objects, initialised with 6 shuffled card decks."""
     
     def __init__(self) -> None:
@@ -37,7 +37,7 @@ class Deck:
                     self.cards.append(Card(suit, cardsymbol))
         r.shuffle(self.cards)
         
-    def show(self, num=False) -> str:
+    def show(self, num: int=False) -> str:
         if num is False:
             for card in self.cards:
                 print(card, end=" ")
@@ -50,6 +50,7 @@ class Deck:
         return self.cards.pop(0)
     
 class PlayerHand:
+    
     """container class for Card objects"""
     
     def __init__(self) -> None:
@@ -85,6 +86,7 @@ class PlayerHand:
         return value
     
 class DealerHand(PlayerHand):
+    
     """container class for Card objects"""
     
     def show(self):
@@ -147,7 +149,9 @@ def showhands(player_hands: list, dealerhand: DealerHand) -> None:
         
 
 def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
+    
     """Evaluates ONE playerhand against the dealers and returns the payout_ratio to the bet for a given outcome."""
+    
     if playerhand.value() > 21:
         print(f"Player busts\n")
         return 0
@@ -169,6 +173,7 @@ def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
     
 
 def main():
+    
     """Runs a blackjack simulation with sidebets of Perfect Pairs and 21+3 and options for double down and split.
        The Payout Ratios have been increased to make it a winning game, it is for fun after all."""
     
@@ -187,13 +192,12 @@ def main():
         
         if play_selection == 2:
             break
+        
         elif play_selection == 1:
             
             blackjack_bets = [100]
             balance -= 120
             deck = Deck()
-            for i in range(10):
-                deck.cards[i] = Card("heart", "5")
             player_hands = [PlayerHand()]
             dealerhand = DealerHand()
             
@@ -211,8 +215,7 @@ def main():
             
             active_hand = ""
             
-            while True:
-                # Player turn
+            while True:  # Player turn
                 
                 clear_screen()
                 
@@ -246,9 +249,11 @@ def main():
                             active_hand.active = False
                         else:
                             active_hand.virgin = False
+                            
                     elif player_game_selection == 2:
                         print("Player stands...\n")
                         active_hand.active = False
+                        
                     elif player_game_selection == 3:
                         print("Player doubles down...\n")
                         time.sleep(2)
@@ -257,11 +262,13 @@ def main():
                         blackjack_bets[active_hand_index] *= 2
                         print(f"New balance is {print_money(balance)}\n")
                         time.sleep(1)
+                        
                         print(f"New bets are:")
                         for i in range(len(blackjack_bets)):
                             print(f"Hand {i+1} bet: {print_money(blackjack_bets[i])}")
                         print("")
                         time.sleep(2)
+                        
                         print("Player draws...\n")
                         
                         active_hand + deck.draw()
@@ -274,8 +281,8 @@ def main():
                         balance -= blackjack_bets[active_hand_index]
                         blackjack_bets.insert(active_hand_index+1, blackjack_bets[active_hand_index])
                         print(f"New balance is {print_money(balance)}\n")
-                        
                         time.sleep(1)
+                        
                         print(f"New bets are:")
                         for i in range(len(blackjack_bets)):
                             print(f"Hand {i+1} bet: {print_money(blackjack_bets[i])}")
