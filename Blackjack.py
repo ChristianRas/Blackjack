@@ -3,8 +3,6 @@ import random as r
 import time
 import os
 
-r.seed(100)
-
 cardsymbol_to_value_dictionary = {"a": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
 
 class Card:
@@ -101,6 +99,13 @@ class DealerHand(PlayerHand):
                 print(card, end=" ")
                 
             print(f"({self.value()})\n")
+            
+    def __add__(self, card) -> None:
+        self.cards.append(card)
+        if self.virgin:  #TODO check this works
+            pass
+        else:
+            self.value()  # update potential aces that gets converted to a value of 1
                 
     
 def clear_screen() -> None:
@@ -154,26 +159,39 @@ def showhands(player_hands: list, dealerhand: DealerHand) -> None:
 
 def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
     
-    """Evaluates ONE playerhand against the dealers and returns the payout_ratio to the bet for a given outcome."""
+    """Evaluates ONE playerhand against the dealers and returns the payout ratio"""
+    
+    payout_ratio = 0
     
     if playerhand.value() > 21:
         print(f"Player busts\n")
-        return 0
+        return payout_ratio
     elif dealerhand.value() > 21:
         print(f"Dealer busts\n")
-        return 2.5
+        
+        if playerhand.value() == 21:
+            print("Player has Blackjack!")
+            time.sleep(1)
+            payout_ratio = 4
+        else:
+            payout_ratio = 2.5
+            
+        return payout_ratio
     elif playerhand.value() == dealerhand.value():
         print("Draw!\n")
-        return 1
+        payout_ratio = 1
+        return payout_ratio
     elif playerhand.value() == 21:
-        print("Blackjack\n")
-        return 4
+        print("Blackjack!\n")
+        payout_ratio = 4
+        return payout_ratio
     elif playerhand.value() > dealerhand.value():
         print("Player beats dealer\n")
-        return 2.5
+        payout_ratio  =2.5
+        return payout_ratio
     else:
         print("Dealer beats player\n")
-        return 0
+        return payout_ratio
     
 
 def main():
@@ -220,8 +238,6 @@ def main():
         if perfect_pairs_payout_ratio > 0:
             print(f"Player wins {print_money(perfect_pairs_payout_ratio*10)}\n")
             balance += perfect_pairs_payout_ratio*10  #TODO this throws UnboundLocalError...
-            time.sleep(1)
-            print(f"New balance is {print_money(balance)}\n")
             time.sleep(3)
         else:
             pass
@@ -260,8 +276,6 @@ def main():
         if twentyone_plus_three_payout_ratio > 0:
             print(f"Player wins {print_money(twentyone_plus_three_payout_ratio*10)}\n")
             balance += twentyone_plus_three_payout_ratio*10
-            time.sleep(1)
-            print(f"New balance is {print_money(balance)}\n")
             time.sleep(3)
         else:
             pass
@@ -273,6 +287,7 @@ def main():
     
     balance = 1000
     blackjack_bets = [0]
+    game_started = False
     
     clear_screen()
     print("\nHello, and welcome to BlackJack!\n")
@@ -282,7 +297,10 @@ def main():
         clear_screen()
         
         print(f"Your balance is {print_money(balance)}\n\n")
-        play_selection = menu_select(["Play", "Quit"])
+        if not game_started:
+            play_selection = menu_select(["Play", "Quit"])
+        else:
+            play_selection = 1
         
         if play_selection == 2:
             break
@@ -297,8 +315,11 @@ def main():
             
             print("Placing bets...\n")
             time.sleep(1)
+            clear_screen()
+            print(f"Your balance is {print_money(balance)}\n\n")
+            print("Placing bets...\n")
             print(f"Bets are:\nPerfect Pairs: {print_money(10)}\nBlackjack: {print_money(100)}\n21+3: {print_money(10)}\n")
-            time.sleep(3)
+            time.sleep(2)
             clear_screen()
             print("Dealing cards...\n")
             time.sleep(1)
@@ -314,7 +335,7 @@ def main():
                 
             showhands(player_hands, dealerhand)
             
-            evaluate_sidebets(player_hands[0], dealerhand)
+            evaluate_sidebets(player_hands[0], dealerhand)  #TODO consider adding continue promt here
             
             if player_hands[0].value() == 21:
                 active_hand = player_hands[0].active = False
@@ -336,7 +357,7 @@ def main():
                     
                         player_game_options = ["Hit", "Stand"]
                         
-                        if active_hand.virgin:
+                        if active_hand.virgin:  #TODO add check if money in balance is enough?
                             player_game_options.append("Double Down")
                             
                             if active_hand.cards[0].cardsymbol == active_hand.cards[1].cardsymbol:
@@ -365,8 +386,6 @@ def main():
                             
                             balance -= blackjack_bets[active_hand_index]
                             blackjack_bets[active_hand_index] *= 2
-                            print(f"New balance is {print_money(balance)}\n")
-                            time.sleep(1)
                             
                             print(f"New bets are:")
                             for i in range(len(blackjack_bets)):
@@ -450,7 +469,7 @@ def main():
             clear_screen()
             showhands(player_hands, dealerhand)
             
-            time.sleep(2)
+            time.sleep(1)
             total_earnings = 0
             for i in range(len(player_hands)):
                 print(f"Evaluating hand {i+1}...\n")
@@ -470,24 +489,25 @@ def main():
                     total_earnings -= blackjack_bets[i]
                 time.sleep(1)
                     
-            time.sleep(2)
             
-            if len(player_hands) > 1:
-                if total_earnings > 0:
-                    print(f"Total money earned: {print_money(total_earnings)}\n")
-                elif total_earnings < 0:
-                    print(f"Total money lost {print_money(total_earnings, loss=True)}")
+            
+            if (len(player_hands) > 1) and (total_earnings > 0):
+                time.sleep(1)
+                print(f"Total money earned: {print_money(total_earnings)}\n")
+            elif (len(player_hands) > 1) and (total_earnings < 0):
+                time.sleep(1)
+                print(f"Total money lost {print_money(total_earnings, loss=True)}")
             else:
                 pass
             
-            time.sleep(1)
-            
-            print(f"New balance is {print_money(balance)}\n")
-            
             time.sleep(2)
             
-            print("Resetting game...\n")
-            time.sleep(4)
+        continue_game_selection = menu_select(["Play again", "Quit"])
+        
+        if continue_game_selection == 1:
+            game_started = True
+        elif continue_game_selection == 2:
+            break
                         
 if __name__ == "__main__":
     main()
