@@ -10,7 +10,7 @@ This project runs a Blackjack CLI program with sidebets and the options of Doubl
 
 ## User Instructions
 
-Make sure to have the required packages laid out in requirements.txt. All other instructions are given during playthrough of the game. The game can be opened directly via the .bat file
+Make sure to have the required packages. All other instructions are given during playthrough of the game. The game can be opened directly via the .bat file
 
 <!-- ## Known Issues (Work in Progress) -->
 

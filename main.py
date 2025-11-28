@@ -80,7 +80,7 @@ def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
         return payout_ratio
     elif playerhand.compute_hand_value() == 21:
         print("Blackjack!\n")
-        payout_ratio = 4
+        payout_ratio = 3.5
         return payout_ratio
     elif playerhand.compute_hand_value() > dealerhand.compute_hand_value():
         print("Player beats dealer\n")
@@ -191,6 +191,7 @@ def main():
         balance_file.close()
     except FileNotFoundError:
         balance = 1000
+    balance = 1000
     
     blackjack_bets = [0]
     initial_load = True
