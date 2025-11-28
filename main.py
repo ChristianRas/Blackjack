@@ -281,8 +281,8 @@ def main():
                         if active_hand.virgin:
                             player_game_options.append("Double Down")
                             
-                        if active_hand.cards[0].value == active_hand.cards[1].value:
-                            player_game_options.append("Split")
+                            if active_hand.cards[0].value == active_hand.cards[1].value:
+                                player_game_options.append("Split")
                         
                     
                     print(f"Active hand is Player Hand {active_hand_index+1}\n")
