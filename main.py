@@ -358,9 +358,9 @@ def main():
                 
                 if payout_ratio > 0:
                     payout = payout_ratio * blackjack_bets[i]
-                    print(f"Player wins {print_money(payout - 100)}\n")
+                    print(f"Player wins {print_money(payout - blackjack_bets[i])}\n")
                     balance += payout
-                    total_won += payout - 100
+                    total_won += payout - blackjack_bets[i]
                 else:
                     print(f"Player loses {print_money(blackjack_bets[i], loss=True)}\n")
                     total_won -= blackjack_bets[i]
