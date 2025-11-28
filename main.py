@@ -17,11 +17,11 @@ def print_money(amount: float, loss=False) -> str:
 
 def menu_select(options: list) -> int:
     
-    # Promts user to select index (using 1-index) from ordered list of options i.e. [option1, option2, ...]
+    # Promts user to select index from 1-indexed ordered list options i.e. [option1, option2, ...]
     
     print("Select action:")
-    for i, option in enumerate(options):
-        print(f"{i+1}. {option}")
+    for option_index, option in enumerate(options):
+        print(f"{option_index+1}. {option}")
         
     is_int = False
     in_range = False
@@ -61,34 +61,70 @@ def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
     
     payout_ratio = 0
     
-    if playerhand.compute_hand_value() > 21:
+    PLAYER_BUSTED = playerhand.compute_hand_value() > 21
+    PLAYER_BLACKJACK = playerhand.compute_hand_value() == 21 and dealerhand.compute_hand_value() != 21
+    DRAW = playerhand.compute_hand_value() == dealerhand.compute_hand_value()
+    PLAYER_WINNING_NORMAL_HAND = (playerhand.compute_hand_value() > dealerhand.compute_hand_value()) or (dealerhand.compute_hand_value() > 21)
+    
+    if PLAYER_BUSTED:
         print(f"Player busts\n")
-        return payout_ratio
-    elif dealerhand.compute_hand_value() > 21:
-        print(f"Dealer busts\n")
-        
-        if playerhand.compute_hand_value() == 21:
-            print("Player has Blackjack!\n")
-            payout_ratio = 3.5
-        else:
-            payout_ratio = 2.5
-            
-        return payout_ratio
-    elif playerhand.compute_hand_value() == dealerhand.compute_hand_value():
+        payout_ratio = 0
+    
+    elif PLAYER_BLACKJACK:
+        print("Player has Blackjack!\n")
+        payout_ratio = 4
+
+    elif DRAW:
         print("Draw!\n")
         payout_ratio = 1
-        return payout_ratio
-    elif playerhand.compute_hand_value() == 21:
-        print("Blackjack!\n")
-        payout_ratio = 3.5
-        return payout_ratio
-    elif playerhand.compute_hand_value() > dealerhand.compute_hand_value():
+        
+    elif PLAYER_WINNING_NORMAL_HAND:
         print("Player beats dealer\n")
         payout_ratio  =2.5
-        return payout_ratio
+        
     else:
         print("Dealer beats player\n")
-        return payout_ratio
+        payout_ratio = 0
+        
+    return payout_ratio
+    
+
+def roleplay_placing_bets() -> None:
+    
+    print("Placing bets...\n")
+    time.sleep(1)
+    time.sleep(1)
+    clear_screen()
+    print("Dealing cards...\n")
+    time.sleep(1)
+    
+
+def conclude_game(player_hands, dealerhand, blackjack_bets, balance) -> float:
+    
+    total_won = 0
+    for i in range(len(player_hands)):
+        print(f"Evaluating hand {i+1}...\n")
+        time.sleep(0.5)
+        
+        payout_ratio = evaluate_game(player_hands[i], dealerhand)
+        time.sleep(0.5)
+        
+        if payout_ratio > 0:
+            payout = payout_ratio * blackjack_bets[i]
+            print(f"Player wins {print_money(payout - blackjack_bets[i])}\n")
+            balance += payout
+            total_won += payout - blackjack_bets[i]
+        else:
+            print(f"Player loses {print_money(blackjack_bets[i], loss=True)}\n")
+            total_won -= blackjack_bets[i]
+    
+    if len(player_hands) > 1:  
+        if total_won >= 0:
+            print(f"Total money earned: {print_money(total_won)}\n")
+        elif total_won < 0:
+            print(f"Total money lost {print_money(total_won, loss=True)}\n")
+    
+    return balance
     
 
 def main():
@@ -138,12 +174,12 @@ def main():
         
         # 21+3
         twentyone_plus_three_payout_ratio = 0
-        cardsymbol_to_value_dictionary = {"a": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}   
-        ranks = [list(cardsymbol_to_value_dictionary).index(card.cardsymbol.upper()) + 1 for card in [playercard_1, playercard_2, dealercard]]
+        cardsymbol_to_value_dictionary = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}   
+        ranks = [list(cardsymbol_to_value_dictionary.keys()).index(card.cardsymbol) + 2 for card in [playercard_1, playercard_2, dealercard]]
         ranks.sort()
         flush = playercard_1.suit == playercard_2.suit == dealercard.suit
-        straight = (ranks[0] + 2 == ranks[1] + 1 == ranks[2]) or (ranks == [2, 3, 14])
-        three_of_a_kind = playercard_1.cardsymbol.upper() == playercard_2.cardsymbol.upper() == dealercard.cardsymbol.upper()
+        straight = (ranks[0] + 2 == ranks[1] + 1 == ranks[2]) or (ranks == [2, 3, 14]) or (ranks == [2, 13, 14])
+        three_of_a_kind = playercard_1.cardsymbol == playercard_2.cardsymbol == dealercard.cardsymbol
         straight_flush = straight and flush
         suited_three_of_a_kind = flush and three_of_a_kind
         
@@ -183,50 +219,40 @@ def main():
         
     current_directory = os.path.dirname(os.path.abspath(__file__))
     balance_file_path = os.path.join(current_directory, 'balance.txt')
-    
-    try:
-        balance_file = open(balance_file_path, "r")
-        balance = float(balance_file.readline())
-        print(f"Read balance is {balance}")
-        balance_file.close()
-    except FileNotFoundError:
-        balance = 1000
     balance = 1000
     
+    # If player splits hand(s) the bets on different hands are organised in a list.
+    # Since sidebets cannot be changed they are not stored, but assumed to be 10$.
     blackjack_bets = [0]
-    initial_load = True
+    initial_game_load = True
+    STANDARD_BETSIZE = 120  # includes 100$ on blackjack and 20$ on sidebets
     
     clear_screen()
     print("\nHello, and welcome to BlackJack!\n")
     time.sleep(1)
     
-    while balance >= 120:
+    while balance >= STANDARD_BETSIZE:
         clear_screen()
         
         print(f"Your balance is {print_money(balance)}\n\n")
-        if initial_load:
+        if initial_game_load:
             play_selection = menu_select(["Play", "Quit"])
+        
+            if play_selection == 2:
+                break
+            
         else:
             play_selection = 1
         
-        if play_selection == 2:
-            break
-        
-        elif play_selection == 1:
+        if play_selection == 1:
             
             blackjack_bets = [100]
-            balance -= 120
+            balance -= STANDARD_BETSIZE
             deck = Deck()
             player_hands = [PlayerHand()]
             dealerhand = DealerHand()
             
-            print("Placing bets...\n")
-            time.sleep(1)
-            print(f"Bets are:\nPerfect Pairs: {print_money(10)}\nBlackjack: {print_money(100)}\n21+3: {print_money(10)}\n")
-            time.sleep(1)
-            clear_screen()
-            print("Dealing cards...\n")
-            time.sleep(1)
+            roleplay_placing_bets()
                 
             for _ in range(2):
                 player_hands[0] + deck.draw()
@@ -278,7 +304,7 @@ def main():
                     
                     if balance >= blackjack_bets[active_hand_index]:  #check if its possible to do further betting
                         
-                        if active_hand.virgin:
+                        if active_hand.untouched:
                             player_game_options.append("Double Down")
                             
                             if active_hand.cards[0].value == active_hand.cards[1].value:
@@ -290,7 +316,7 @@ def main():
                     
                     if player_game_selection == 1:
                         active_hand + deck.draw()
-                        active_hand.virgin = False
+                        active_hand.untouched = False
                             
                     elif player_game_selection == 2:
                         active_hand.active = False
@@ -308,15 +334,21 @@ def main():
                         
                         cards_to_split = active_hand.cards[0], active_hand.cards[1]
                         
-                        player_hands[active_hand_index] = PlayerHand([cards_to_split[0], deck.draw()])
-                        player_hands.insert(active_hand_index + 1, PlayerHand([cards_to_split[1], deck.draw()]))
+                        new_first_hand = PlayerHand()
+                        new_second_hand = PlayerHand()
+                        new_first_hand + cards_to_split[0]
+                        new_second_hand + cards_to_split[1]
+                        new_first_hand + deck.draw()
+                        new_second_hand + deck.draw()
                         
-            
+                        player_hands[active_hand_index] = new_first_hand
+                        player_hands.insert(active_hand_index + 1, new_second_hand)
+                        
+            PLAYER_BUSTED = all(hand.compute_hand_value() > 21 for hand in player_hands)
                     
-            if all(hand.compute_hand_value() > 21 for hand in player_hands):
-                pass  #skip dealer action
-            else:
-                # Dealer turn
+            if PLAYER_BUSTED:
+                pass
+            else:  # Dealer turn
                 
                 clear_screen()
                 showhands(player_hands, dealerhand)
@@ -324,70 +356,46 @@ def main():
                 print("Dealer Shows...\n")
                 time.sleep(1)
             
-                dealerhand.virgin = False
+                dealerhand.hidden = False
                 
                 while True:
                     
                     clear_screen()
                     showhands(player_hands, dealerhand)
                     
-                    if (dealerhand.compute_hand_value() < 17 and dealerhand.soft is False) or (dealerhand.compute_hand_value() <= 17 and dealerhand.soft is True):
+                    DEALER_SHOULD_HIT = (dealerhand.compute_hand_value() < 17 and dealerhand.soft is False) or (dealerhand.compute_hand_value() <= 17 and dealerhand.soft is True)
+                    
+                    if DEALER_SHOULD_HIT:
                         time.sleep(1)
                         print("Dealer hits...")
                         dealerhand + deck.draw()
                         time.sleep(1)
                         
                     else:
-                        
                         time.sleep(1)
-                        print("Dealer Stands...")
+                        if dealerhand.compute_hand_value() > 21:
+                            print("Dealer busts")
+                        else:
+                            print("Dealer Stands...")
                         time.sleep(1)
-
                         break
             
             # Conluding game
             clear_screen()
             showhands(player_hands, dealerhand)
-            total_won = 0
-            for i in range(len(player_hands)):
-                print(f"Evaluating hand {i+1}...\n")
-                time.sleep(0.5)
-                
-                payout_ratio = evaluate_game(player_hands[i], dealerhand)
-                time.sleep(0.5)
-                
-                if payout_ratio > 0:
-                    payout = payout_ratio * blackjack_bets[i]
-                    print(f"Player wins {print_money(payout - blackjack_bets[i])}\n")
-                    balance += payout
-                    total_won += payout - blackjack_bets[i]
-                else:
-                    print(f"Player loses {print_money(blackjack_bets[i], loss=True)}\n")
-                    total_won -= blackjack_bets[i]
+            balance = conclude_game(player_hands, dealerhand, blackjack_bets, balance)
             
-            if (len(player_hands) > 1) and (total_won > 0):
-                print(f"Total money earned: {print_money(total_won)}\n")
-            elif (len(player_hands) > 1) and (total_won < 0):
-                print(f"Total money lost {print_money(total_won, loss=True)}")
-            else:
-                pass
+            print(f"Your new balance is {print_money(balance)}\n")
             
         continue_game_selection = menu_select(["Play again", "Quit"])
         
         if continue_game_selection == 1:
-            initial_load = False
+            initial_game_load = False
         elif continue_game_selection == 2:
             break
 
-    if balance <= 120:  # don't trigger if user simply quit
+    if balance <= STANDARD_BETSIZE:
         print("Oh no you are broke!")
-        
-    balance_file = open(balance_file_path, "w")
-    if balance >= 120:
-        balance_file.write(str(balance))
-    else:
-        balance_file.write(str(1000))
-    balance_file.close()
 
 if __name__ == "__main__":
     main()

@@ -55,12 +55,10 @@ class PlayerHand:
     
     """container class for Card objects"""
     
-    def __init__(self, cards: list[Card]|None = None) -> None:
-        if cards == None:
-            self.cards : list[Card] = []
-        else:
-            self.cards = cards
-        self.virgin = True  # if the hand has two cards only (e.g. no hits or double down have been used)
+    def __init__(self, ) -> None:
+
+        self.cards : list[Card] = []
+        self.untouched = True
         self.active = True  # If the hand is still in play (neither stood on or busted)
         self.value = False
     
@@ -102,15 +100,17 @@ class DealerHand(PlayerHand):
     """container class for Card objects"""
     
     def __init__(self):
-        super().__init__()
-        self.soft = False
+        self.cards : list[Card] = []
+        self.hidden = True
+        self.value = False
         
     def compute_hand_value(self) -> int:
         
         
         hand_value = 0
+        self.soft = False
         
-        if self.virgin:
+        if self.hidden:
             hand_value = self.cards[0].value
             
         else:
@@ -119,10 +119,11 @@ class DealerHand(PlayerHand):
                 hand_value += card.value
             
             # correct Aces from 11 to 1 if needed and update soft status of dealerhand
-            number_of_corrections = 0
+            
             if hand_value > 21:
                 
                 aces_found = [card.cardsymbol for card in self.cards].count("A")
+                number_of_corrections = 0
                 
                 for i in range(aces_found):
                     hand_value -= 10
@@ -130,17 +131,15 @@ class DealerHand(PlayerHand):
                     if hand_value <= 21:
                         break
             
-            if number_of_corrections < self.cards.count("A"):
-                self.soft = True
-            else:
-                self.soft = False
+                if number_of_corrections < aces_found:
+                    self.soft = True
         
         return hand_value
     
     
     def show(self):
         
-        if self.virgin:
+        if self.hidden:
             
             print("Dealer Hand: ", self.cards[0], f"X ({self.compute_hand_value()})\n")
             
