@@ -92,8 +92,8 @@ def evaluate_game(playerhand: PlayerHand, dealerhand: DealerHand) -> float:
 def roleplay_placing_bets() -> None:
     
     print("Placing bets...\n")
-    time.sleep(1)
-    time.sleep(1)
+    time.sleep(2)
+    
     clear_screen()
     print("Dealing cards...\n")
     time.sleep(1)
